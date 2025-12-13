@@ -1,18 +1,46 @@
 import { createElement } from './utils';
 
-const DEFAULT_OPTIONS: VisualizeOptions = {
+type ResolvedVisualizeOptions = Required<VisualizeOptions>;
+type CharMapEntry = { show: boolean; type: string; warp?: boolean };
+type CharMap = { [key: string]: CharMapEntry };
+
+const DEFAULT_OPTIONS: ResolvedVisualizeOptions = {
   showSpace: true,
   showTab: true,
   showNewline: true,
   showCarriageReturn: true,
 };
 
-const createCharMap = (opts: VisualizeOptions) => ({
-  ' ': { show: opts.showSpace ?? true, type: 'space' },
-  '\t': { show: opts.showTab ?? true, type: 'tab' },
-  '\n': { show: opts.showNewline ?? true, type: 'newline' },
-  '\r': { show: opts.showCarriageReturn ?? true, type: 'carriage-return' },
+const resolveOptions = (
+  opts: VisualizeOptions = {}
+): ResolvedVisualizeOptions => ({
+  ...DEFAULT_OPTIONS,
+  ...opts,
 });
+
+const charMapCache = new Map<string, CharMap>();
+
+const getCharMapCacheKey = (opts: ResolvedVisualizeOptions): string =>
+  `${Number(opts.showSpace)}-${Number(opts.showTab)}-${Number(
+    opts.showNewline
+  )}-${Number(opts.showCarriageReturn)}`;
+
+const createCharMap = (opts: ResolvedVisualizeOptions): CharMap => ({
+  ' ': { show: opts.showSpace, type: 'space' },
+  '\t': { show: opts.showTab, type: 'tab' },
+  '\n': { show: opts.showNewline, type: 'newline', warp: true },
+  '\r': { show: opts.showCarriageReturn, type: 'carriage-return', warp: true },
+});
+
+const getCharMap = (opts: ResolvedVisualizeOptions): CharMap => {
+  const cacheKey = getCharMapCacheKey(opts);
+  const cached = charMapCache.get(cacheKey);
+  if (cached) return cached;
+
+  const nextMap = createCharMap(opts);
+  charMapCache.set(cacheKey, nextMap);
+  return nextMap;
+};
 
 const updateDisplay = (
   text: string,
@@ -22,10 +50,10 @@ const updateDisplay = (
 ) => {
   if (text === lastText) return text;
 
-  const mergedOpts = { ...DEFAULT_OPTIONS, ...opts };
+  const mergedOpts = resolveOptions(opts);
 
   if (!text) {
-    element.innerHTML = '';
+    element.replaceChildren();
     return text;
   }
 
@@ -37,21 +65,18 @@ const updateDisplay = (
     return text;
   }
 
-  element.innerHTML = '';
-  if (text) {
-    element.appendChild(createVisualizedNodes(text, mergedOpts));
-  }
+  element.replaceChildren(createVisualizedNodes(text, mergedOpts));
 
   return text;
 };
 
-export function createVisualizedNodes(
+export const createVisualizedNodes = (
   text: string,
   opts: VisualizeOptions = {}
-): DocumentFragment {
+): DocumentFragment => {
   const fragment = document.createDocumentFragment();
-  const mergedOpts = { ...DEFAULT_OPTIONS, ...opts };
-  const charMap = createCharMap(mergedOpts);
+  const mergedOpts = resolveOptions(opts);
+  const charMap = getCharMap(mergedOpts);
 
   let normalTextBuffer = '';
 
@@ -64,17 +89,29 @@ export function createVisualizedNodes(
 
   for (let i = 0, len = text.length; i < len; i++) {
     const char = text[i];
-    const mapping = charMap[char as keyof typeof charMap];
+    const mapping = charMap[char];
 
-    if (char in charMap && mapping.show) {
+    if (mapping && mapping.show) {
       flushNormalText();
       const el = createElement(
         'span',
         'mk-text-visible-char',
         `mk-text-visible-char-${mapping.type}`
       );
-      el.textContent = char;
-      fragment.appendChild(el);
+
+      if (mapping.warp) {
+        const warpEl = createElement(
+          'span',
+          'mk-text-visible-warp',
+          `mk-text-visible-warp-${mapping.type}`
+        );
+        warpEl.appendChild(el);
+        warpEl.appendChild(document.createTextNode(char));
+        fragment.appendChild(warpEl);
+      } else {
+        el.textContent = char;
+        fragment.appendChild(el);
+      }
     } else {
       normalTextBuffer += char;
     }
@@ -83,9 +120,9 @@ export function createVisualizedNodes(
   flushNormalText();
 
   return fragment;
-}
+};
 
-export function createVisibleInput(
+export const createVisibleInput = (
   container: HTMLElement,
   options: VisualizeOptions = {}
 ): {
@@ -93,7 +130,7 @@ export function createVisibleInput(
   textareaEl: HTMLTextAreaElement;
   visualizeEl: HTMLElement;
   update: (text?: string) => void;
-} {
+} => {
   const wrapperEl = createElement('div', 'mk-text-visible-input-wrapper');
   const textareaEl = createElement('textarea', 'mk-text-visible-input');
   const visualizeEl = createElement('pre', 'mk-text-visible-input-visualize');
@@ -103,7 +140,7 @@ export function createVisibleInput(
   container.appendChild(wrapperEl);
 
   let lastValue = '';
-  const mergedOpts = { ...DEFAULT_OPTIONS, ...options };
+  const mergedOpts = resolveOptions(options);
 
   const update = (text?: string) => {
     if (typeof text === 'string') {
@@ -131,21 +168,21 @@ export function createVisibleInput(
   update();
 
   return { wrapperEl, textareaEl, visualizeEl, update };
-}
+};
 
-export function createVisibleDisplay(
+export const createVisibleDisplay = (
   container: HTMLElement,
   options: VisualizeOptions = {}
 ): {
   displayEl: HTMLPreElement;
   update: (text: string) => void;
-} {
+} => {
   const displayEl = createElement('pre', 'mk-text-visible-display');
 
   container.appendChild(displayEl);
 
   let lastText = '';
-  const mergedOpts = { ...DEFAULT_OPTIONS, ...options };
+  const mergedOpts = resolveOptions(options);
 
   return {
     displayEl,
@@ -153,14 +190,14 @@ export function createVisibleDisplay(
       lastText = updateDisplay(text, lastText, displayEl, mergedOpts);
     },
   };
-}
+};
 
-export function linkInputToDisplay(
+export const linkInputToDisplay = (
   input: HTMLTextAreaElement,
   display: HTMLPreElement,
   options: VisualizeOptions = {}
-): () => void {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
+): (() => void) => {
+  const opts = resolveOptions(options);
   let lastValue = '';
 
   const update = () => {
@@ -177,13 +214,14 @@ export function linkInputToDisplay(
   return () => {
     input.removeEventListener('input', update);
     input.removeEventListener('change', update);
+    input.removeEventListener('mk:update', update);
   };
-}
+};
 
-export function setCustomSymbols(
+export const setCustomSymbols = (
   container: HTMLElement,
   symbols: Partial<CustomSymbols> & { color?: string }
-): void {
+): void => {
   const { style } = container;
   if (symbols.space) {
     style.setProperty('--mk-space-symbol', `'${symbols.space}'`);
@@ -199,7 +237,7 @@ export function setCustomSymbols(
     );
   }
   if (symbols.color) style.setProperty('--mk-symbol-color', symbols.color);
-}
+};
 
 export const SYMBOL_THEMES = {
   default: { space: '·', tab: '→', newline: '␊', carriageReturn: '␍' },
@@ -209,14 +247,14 @@ export const SYMBOL_THEMES = {
   classic: { space: '○', tab: '⇨', newline: '⤵', carriageReturn: '↪' },
 } as const;
 
-export function applySymbolTheme(
+export const applySymbolTheme = (
   container: HTMLElement,
   theme: keyof typeof SYMBOL_THEMES
-): void {
+): void => {
   if (SYMBOL_THEMES[theme]) {
     setCustomSymbols(container, SYMBOL_THEMES[theme]);
   }
-}
+};
 
 export interface CustomSymbols {
   space?: string;
