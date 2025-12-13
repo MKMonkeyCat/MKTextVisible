@@ -38,6 +38,8 @@ jobs:
         run: |
           yarn build
           yarn build:lib
+        env:
+          VITE_BASE_URL: ./
 
       - name: Prepare demo files
         run: |

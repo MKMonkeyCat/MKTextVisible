@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    base: process.env.VITE_BASE_URL || '/',
     build: {
       outDir: 'dist-demo',
       emptyOutDir: true,
