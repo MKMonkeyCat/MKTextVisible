@@ -1,0 +1,107 @@
+# MK Text Visible (mk-text-visible)
+
+一個輕量級(有點破)的、基於 Vite + TypeScript + Vanilla 的不可見字元可視化 library
+
+> [!WARNING]
+> 由於該 Library 極其簡單，無過多優化，建議不要用於大量文本修改及顯示的場景
+> 若向本 Demo 類似的場景，若不可見字元過多時，會導致卡頓(生成時)，建議用於不常修改的文本顯示
+
+## 功能
+
+- 可視化空格、Tab、換行符號等不可見字元
+- 支援多種符號主題
+
+## 使用
+
+### 使用 IIFE 版本 [一輸入區域 + 一顯示區域]
+
+在 HTML 中引入 IIFE 版本的腳本 [Link Demo](https://monkey-cat.com/MKTextVisible/demo/IIFE-link.html)：
+
+```html
+<link rel="stylesheet" href="./mk-text-visible.css" />
+
+<script src="./mk-text-visible.iife.js"></script>
+<script>
+  const {
+    createVisibleInput,
+    createVisibleDisplay,
+    linkInputToDisplay,
+    applySymbolTheme,
+  } = MKTextVisible;
+
+  const container = document.getElementById('container');
+
+  // 創建可見輸入區域 (可使用者輸入的)
+  const { wrapperEl, textareaEl, update } = createVisibleInput(container);
+  // 創建可見顯示區域 (不可使用者輸入的)
+  const { displayEl } = createVisibleDisplay(container);
+
+  // 套用符號主題
+  // "default" | "dots" | "arrows" | "minimal" | "classic"
+  applySymbolTheme(wrapperEl, 'default');
+  applySymbolTheme(displayEl, 'minimal');
+
+  // 將輸入區域與顯示區域連接起來 (輸入區域內容變化時，顯示區域自動更新)
+  // 也可以不連接，使用函數手動設定顯示區域內容
+  linkInputToDisplay(textareaEl, displayEl);
+
+  // 更新顯示區域內容
+  update(`# MK Text Visible (mk-text-visible)
+
+一個輕量級的、基於 Vite + TypeScript + Vanilla 的不可見字元可視化 library。
+
+> [!WARNING]  
+> 由於該 Library 極其簡單，無過多優化，建議不要用於大量文本修改及顯示的場景
+> 若向本 Demo 類似的場景，若不可見字元過多時，會導致卡頓(生成時)，建議用於不常修改的文本顯示
+
+## 功能
+
+- 可視化空格、Tab、換行符號等不可見字元
+- 支援多種符號主題
+
+空格 
+Tab\t
+`);
+</script>
+```
+
+### 使用 IIFE 版本 [僅顯示區域]
+
+在 HTML 中引入 IIFE 版本的腳本 [Display Demo](https://monkey-cat.com/MKTextVisible/demo/IIFE-display.html)：
+
+```html
+<link rel="stylesheet" href="./mk-text-visible.css" />
+
+<script src="./mk-text-visible.iife.js"></script>
+<script>
+  const { createVisibleDisplay, linkInputToDisplay, applySymbolTheme } =
+    MKTextVisible;
+
+  const container = document.getElementById('container');
+
+  // 創建可見顯示區域 (不可使用者輸入的)
+  const { displayEl, update } = createVisibleDisplay(container);
+
+  // 套用符號主題
+  // "default" | "dots" | "arrows" | "minimal" | "classic"
+  applySymbolTheme(displayEl, 'minimal');
+
+  // 更新顯示區域內容
+  update(`# MK Text Visible (mk-text-visible)
+
+一個輕量級的、基於 Vite + TypeScript + Vanilla 的不可見字元可視化 library。
+
+> [!WARNING]  
+> 由於該 Library 極其簡單，無過多優化，建議不要用於大量文本修改及顯示的場景
+> 若向本 Demo 類似的場景，若不可見字元過多時，會導致卡頓(生成時)，建議用於不常修改的文本顯示
+
+## 功能
+
+- 可視化空格、Tab、換行符號等不可見字元
+- 支援多種符號主題
+
+空格 
+Tab\t
+`);
+</script>
+```
