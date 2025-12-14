@@ -29,6 +29,8 @@ jobs:
 
       - name: Build
         run: yarn build:lib
+        env:
+          VITE_LIB_VERSION: ${{ github.event.inputs.version || github.ref_name }}
 
       - uses: actions/upload-artifact@v4
         with:
