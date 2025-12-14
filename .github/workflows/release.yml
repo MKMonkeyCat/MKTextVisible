@@ -34,8 +34,9 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         with:
-          name: build_out
+          name: dist
           path: dist/*
+          compression-level: 0
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -43,7 +44,7 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
         with:
-          files: build_out/*
+          files: dist/*
           token: ${{ secrets.GITHUB_TOKEN }}
           name: v${{ env.PACKAGE_VERSION }}
           tag_name: v${{ env.PACKAGE_VERSION }}
