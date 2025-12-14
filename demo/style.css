@@ -25,6 +25,24 @@ body {
   overflow-y: auto;
 }
 
+.mk-text-visible-input-wrapper {
+  position: relative;
+}
+
+.mk-text-visible-input-wrapper::after {
+  content: 'Input';
+  position: absolute;
+  color: #aaa;
+  pointer-events: none;
+  user-select: none;
+  top: 0;
+  right: 0;
+  font-size: 0.75rem;
+  padding: 5px 10px 5px;
+  background-color: #fff;
+  border-end-start-radius: 5px;
+}
+
 .mk-text-visible-display,
 .mk-text-visible-input-wrapper {
   border: 1px solid #ccc;
