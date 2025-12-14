@@ -28,6 +28,10 @@
   user-select: none;
 }
 
+.mk-text-visible-display {
+  position: relative;
+}
+
 .mk-text-visible-input,
 .mk-text-visible-display,
 .mk-text-visible-input-visualize {
@@ -48,7 +52,7 @@
   scrollbar-gutter: stable;
 }
 
-.mk-text-visible-char:before {
+.mk-text-visible-char::before {
   color: var(--mk-symbol-color, #aaa);
   font-weight: 700;
   user-select: none;
@@ -66,19 +70,25 @@
   display: contents;
 }
 
-.mk-text-visible-char-tab:before {
+.mk-text-visible-warp::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+}
+
+.mk-text-visible-char-tab::before {
   content: var(--mk-tab-symbol, '→');
 }
 
-.mk-text-visible-char-space:before {
+.mk-text-visible-char-space::before {
   content: var(--mk-space-symbol, '·');
 }
 
-.mk-text-visible-char-newline:before {
+.mk-text-visible-char-newline::before {
   content: var(--mk-newline-symbol, '␊');
 }
 
-.mk-text-visible-char-carriage-return:before {
+.mk-text-visible-char-carriage-return::before {
   content: var(--mk-carriage-return-symbol, '␍');
 }
 
@@ -92,8 +102,8 @@
   position: absolute;
 }
 
-.mk-text-visible-char-tab:before,
-.mk-text-visible-char-space:before {
+.mk-text-visible-char-tab::before,
+.mk-text-visible-char-space::before {
   position: absolute;
   inset: 0;
   display: flex;
